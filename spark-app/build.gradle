@@ -7,6 +7,8 @@ plugins {
 }
 
 dependencies {
+    implementation project(':utilities')
+
     implementation 'org.apache.commons:commons-text'
     implementation 'org.apache.spark:spark-core_2.13:3.3.2'
     implementation 'org.apache.spark:spark-sql_2.13:3.3.2'
@@ -15,7 +17,7 @@ dependencies {
     implementation 'org.apache.spark:spark-streaming-kafka-0-10_2.13:3.3.2'
     implementation 'org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.2'
 
-    implementation project(':utilities')
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
 }
 
 application {

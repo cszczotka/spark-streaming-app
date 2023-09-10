@@ -10,7 +10,7 @@ public class SparkSessionUtils {
                 .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
                 //.config("spark.sql.warehouse.dir", "C:/tmp/hive/spark-warehouse")
                 //.config("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=C:/tmp/hive/metastore_db;create=true")
-                .appName("DemoApp")
+                .appName(appName)
                 .master("local[1]")
                 .enableHiveSupport()
                 .getOrCreate();
@@ -24,7 +24,7 @@ public class SparkSessionUtils {
                 .config("spark.sql.streaming.checkpointLocation", "data/checkpoints")
                 //.config("spark.sql.warehouse.dir", "C:/tmp/hive/spark-warehouse")
                 //.config("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=C:/tmp/hive/metastore_db;create=true")
-                .appName("DemoApp")
+                .appName(appName)
                 .master("local[1]")
                 .enableHiveSupport()
                 .getOrCreate();

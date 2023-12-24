@@ -23,12 +23,12 @@ public class JoinRandomStreamApp {
 
             Dataset<Row> impressions = testStream
                     .select(
-                            (functions.col("value").plus(15)).as("impressionAdId"),
+                            functions.col("value").as("impressionAdId"),
                             functions.col("timestamp").as("impressionTime"));
 
             Dataset<Row> clicks = testStream
                     .select(
-                            functions.col("value").as("clickAdId"),
+                            (functions.col("value")).plus(15).as("clickAdId"),
                             functions.col("timestamp").as("clickTime"));
 
             Dataset<Row> impressionsWithWatermark =
@@ -42,12 +42,16 @@ public class JoinRandomStreamApp {
                     functions.expr(
                             "clickAdId = impressionAdId AND " +
                                     "clickTime >= impressionTime AND " +
-                                    "clickTime <= impressionTime + interval 1 hour"),
+                                    "clickTime <= impressionTime + interval + 30 seconds"),
                     "leftOuter"
             );
 
+            /*
             result.writeStream().outputMode("append").format("console").option("checkpointLocation", DATA_DIR + "/output-checkpoint")
-                    .start().awaitTermination(60000);
+                    .start().awaitTermination();
+            */
+            result.writeStream().outputMode("append").format("delta").option("checkpointLocation", DATA_DIR + "/output-checkpoint")
+                    .start(DATA_DIR+"/output").awaitTermination();
 
         } catch (Exception e) {
             e.printStackTrace();

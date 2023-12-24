@@ -4,6 +4,7 @@
 
 plugins {
     id 'com.ilab.recon.java-library-conventions'
+    id 'scala'
 }
 
 dependencies {

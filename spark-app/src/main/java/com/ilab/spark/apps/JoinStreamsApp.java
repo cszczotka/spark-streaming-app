@@ -1,12 +1,13 @@
 package com.ilab.spark.apps;
 
 import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.api.java.function.MapPartitionsFunction;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import scala.reflect.ClassTag;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ public class JoinStreamsApp {
 
     private static String DATA_DIR = "data/" + UUID.randomUUID().toString();
 
-    private static void createDeltaTable(SparkSession spark) {
+    private static void createDeltaTableWithSampleData(SparkSession spark) {
         StructType mySchema = new StructType(new StructField[]{
                 new StructField("id", DataTypes.LongType, false, Metadata.empty()),
                 new StructField("aggregated_id", DataTypes.StringType, false, Metadata.empty()),
@@ -39,24 +40,48 @@ public class JoinStreamsApp {
         spark.createDataFrame(rows, mySchema).write().mode("overwrite").format("delta").save(DATA_DIR+"/input");
 
     }
+
+    private static void approach2() throws Exception {
+        SparkSession spark =  createSparkSessionForStreaming("JoinTwoStreamsApp");
+        createDeltaTableWithSampleData(spark);
+        Dataset<Row> ds1 = spark
+                .readStream()
+                .format("delta")
+                .load(DATA_DIR + "/input")
+                .filter((FilterFunction<Row>) r -> "type1".equalsIgnoreCase(r.getAs("type")))
+                .withWatermark("createDate", "5 minute").alias("s1");;
+
+        ds1.mapPartitions((MapPartitionsFunction<Row, Object>) input -> null, new Encoder<Object>() {
+            @Override
+            public StructType schema() {
+                return null;
+            }
+
+            @Override
+            public ClassTag<Object> clsTag() {
+                return null;
+            }
+        });
+
+    }
     public static void main(String[] args) {
         try {
             SparkSession spark =  createSparkSessionForStreaming("JoinTwoStreamsApp");
-            createDeltaTable(spark);
+            createDeltaTableWithSampleData(spark);
 
             Dataset<Row> ds1 = spark
                     .readStream()
                     .format("delta")
                     .load(DATA_DIR + "/input")
                     .filter((FilterFunction<Row>) r -> "type1".equalsIgnoreCase(r.getAs("type")))
-                    .withWatermark("createDate", "5 minute").alias("s1");;
+                    .withWatermark("createDate", "5 minute").alias("s1");
 
             Dataset<Row> ds2 = spark
                     .readStream()
                     .format("delta")
                     .load(DATA_DIR + "/input")
                     .filter((FilterFunction<Row>) r -> "type2".equalsIgnoreCase(r.getAs("type")))
-                    .withWatermark("createDate", "5 minute").alias("s2");;
+                    .withWatermark("createDate", "5 minute").alias("s2");
 
             //inner join
             //Dataset<Row>  result = ds1.join(ds2, "id");

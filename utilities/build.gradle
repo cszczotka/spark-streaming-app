@@ -8,5 +8,8 @@ plugins {
 }
 
 dependencies {
+    implementation 'org.apache.spark:spark-core_2.13:3.3.2'
+    implementation 'org.apache.spark:spark-sql_2.13:3.3.2'
 
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.16.0'
 }

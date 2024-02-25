@@ -12,6 +12,7 @@ object DeltaUpsertApp extends App {
   val spark = SparkSession.builder
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    .config("spark.databricks.delta.schema.autoMerge.enabled", "true")
     .appName("DeltaScala")
     .master("local[1]")
     .getOrCreate
@@ -20,7 +21,7 @@ object DeltaUpsertApp extends App {
     spark.readStream
       .format("rate")
       .option("numPartitions", 10)
-      .option("rowsPerSecond", 10)
+      .option("rowsPerSecond", 1)
       .load()
       .selectExpr(
         "md5( CAST (value AS STRING) ) as md5"
@@ -37,16 +38,16 @@ object DeltaUpsertApp extends App {
   // Define your Delta table
   val tableLocation = new File(f"data/delta_table").getCanonicalFile.toURI.toString;
 
-  val deltaTable = DeltaTable.createIfNotExists()
-    .addColumn(StructField("md5", StringType, false))
-    .addColumn(StructField("value", LongType, false))
+   DeltaTable.createIfNotExists()
     .addColumn(StructField("id", LongType, false))
-    .addColumn(StructField("timestamp", TimestampType, false))
     .location(tableLocation).execute()
 
 
   // Define your foreachBatch logic to perform upserts
   def upsertToDelta(microBatchDF: DataFrame, batchId: Long): Unit = {
+
+    val deltaTable = DeltaTable.forPath(tableLocation)
+
     deltaTable.as("target")
       .merge(
         microBatchDF.as("updates"),
